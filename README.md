@@ -1,1 +1,3 @@
-# minesweeper-hint
+# Minesweeper Hints Extension
+
+![](image.png)
