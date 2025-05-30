@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Minesweeper Hints</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- JSMinesweeper App Embedded -->
+    <meta charset="ISO-8859-1">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, shrink-to-fit=yes">
+    <link rel="stylesheet" href="JSMinesweeper/Minesweeper/client/main.css">
+    <link rel="icon" type="image/png" href="JSMinesweeper/resources/images/flagged.png" />
+    <title>Minesweeper solver</title>
+
+<style>
+  html, body {
+    min-width: 400px;
+    min-height: 300px;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    resize: both;
+    box-sizing: border-box;
+  }
+  #popup-resize-grip {
+    position: absolute;
+    left: 2px;
+    bottom: 2px;
+    right: auto;
+    width: 16px;
+    height: 16px;
+    cursor: sw-resize;
+    z-index: 9999;
+    background: url('data:image/svg+xml;utf8,<svg fill="gray" xmlns="http://www.w3.org/2000/svg" width="16" height="16"><path d="M16 16 L0 0 M12 16 L0 4 M8 16 L0 8" stroke="gray"/></svg>') no-repeat center center;
+    opacity: 0.3;
+  }
+</style>
+<body>
+  <div id="popup-resize-grip"></div>
+  <div style="position: relative; width: 100vw; height: 100vh; overflow: hidden;">
+
+    <!-- control panel on the left -->
+    <nav id="controls" style="zoom: 0.9; position: absolute; left: 0px; top: 65px; bottom: 0px; width: 175px; display: none; overflow-y: auto">
+        <div id="play0" style="margin-top: 0px;">
+            <div class="checkboxes">
+                <label><input type="checkbox" class="checkbox" id="useSeed" /> <span>Use seed</span></label>
+            </div>
+            <div>
+                <input id="seed" type="text" style="width: 150px" />
+            </div>
+            <div class="checkboxes" style="margin-top: 10px;">
+                <label><input type="checkbox" class="checkbox" id="gameTypeZero" /> <span>Opening on start</span></label>
+                <label><input type="checkbox" class="checkbox" id="noGuessMode" /> <span>No Guess</span></label>
+                <label><input type="checkbox" class="checkbox" id="fastPlay" /> <span>Fast mode</span></label>
+                <label><input type="checkbox" class="checkbox" id="hardcore" /> <span>Hard Core</span></label>
+            </div>
+        </div>
+        <div class="radioButtons" style="margin-top: 5px;">
+            <label><input id="beginner" type="radio" class="radioButton" name="boardSize" value="0"><span>Beginner</span></label>
+            <label><input id="intermediate" type="radio" class="radioButton" name="boardSize" value="1"><span>Intermediate</span></label>
+            <label><input id="expert" type="radio" class="radioButton" name="boardSize" value="2" checked><span>Expert</span></label>
+            <label style="margin-bottom: 0.5em;"><input id="custom" type="radio" class="radioButton" name="boardSize" value="3"><span>Custom</span></label>
+        </div>
+        <div style="margin-top: 0px;">
+            <div class="block">
+                <label>Width:</label>
+                <input id="width" type="text" />
+            </div>
+            <div class="block">
+                <label>Height:</label>
+                <input id="height" type="text" />
+            </div>
+            <div class="block">
+                <label>Mines:</label>
+                <input id="mines" type="text" />
+            </div>
+        </div>
+        <div style="margin-top: 1em; display: none;" class="radioButtons" id="analysis0">
+            <label><input id="buildHidden" type="radio" class="radioButton" name="buildType" value="hidden"><span>Build all hidden</span></label>
+            <label><input id="buildZero" type="radio" class="radioButton" name="buildType" value="zero" checked><span>Build all zero</span></label>
+            <button style="margin-top: 1em;" id="localStorageButton">Local Storage</button>
+        </div>
+        <button type="button" style="margin-top: 5px;" id="NewGame">New game</button>
+        <button type="button" style="margin-top: 5px;" id="repeatGame">Play again</button>
+        <div style="margin-top: 10px;">
+            <label>Style:</label>
+            <select id="playstyle">
+                <option value="flag">Flagging</option>
+                <option value="noflag">No flagging</option>
+                <option value="eff">Safe efficiency</option>
+                <option value="nfeff">NF efficiency</option>
+            </select>
+        </div>
+
+        <div style="margin-top: 1em;" class="checkboxes" id="play1">
+            <label><input type="checkbox" class="checkbox" id="reduction" /> <span>Reduction</span></label>
+            <label><input type="checkbox" class="checkbox" id="showhints" checked /> <span>Show hints</span></label>
+            <label><input type="checkbox" class="checkbox" id="autoplay" checked /> <span>Auto play</span></label>
+            <label><input type="checkbox" class="checkbox" id="acceptguesses" /> <span>Accept guesses</span></label>
+        </div>
+        <div style="margin-top: 10px;">
+            <label>Overlay:</label>
+            <select id="overlay">
+                <option value="none">None</option>
+                <option value="safety">Safety %</option>
+                <option value="mine" selected>Mine %</option>
+            </select>
+        </div>
+        <div style="margin-top: 1em; display: none;" class="checkboxes" id="analysis1">
+            <label><input type="checkbox" class="checkbox" id="buildMode" checked /> <span>Build mode</span></label>
+            <label><input type="checkbox" class="checkbox" id="lockMineCount" /> <span><u>L</u>ock mine count</span></label>
+            <label><input type="checkbox" class="checkbox" id="flagIsMine" checked /> <span>Treat flags as mines</span></label>
+        </div>
+        <div style="margin-top: 5px;" class="checkboxes">
+            <label><input type="checkbox" class="checkbox" id="urlQueryString" /> <span>URL query string</span></label>
+        </div>
+    </nav>
+
+    <!-- where the board goes -->
+    <div id="wholeboard" style="display: flex; flex-direction: column; position: absolute; left: 0px; right: 0px; top: 0px; bottom: 0px;">
+        <div class="tooltip" id="canvas" style="position: absolute; left: 0px; top: 0px; bottom: 0px; right: 0px;">
+            <div id="mirror-cursor" style="position: absolute; width: 8px; height: 8px; background-color: red; border: 2px solid white; border-radius: 50%; pointer-events: none; display: none; z-index: 9999;"></div>
+            <div id="display" style="display: flex; flex-direction: row; height: 0px;">
+                <div>
+                    <canvas class="led" id="myMinesLeft" style="position: relative; left: 3px; top:3px; width: 60px; height: 36px; display: none;"></canvas>
+                    <input type="image" src='JSMinesweeper/resources/images/flaggedWrong_thin.png' id="leftClickFlag" id="leftClickFlag" style="position: relative; left: 5px; top: 2px; width: 40px; height: 40px;" />
+                    
+                    <span style="color: red;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; LOADING... </span>
+                    
+                    <input type="image" src='JSMinesweeper/resources/images/face.svg' id="newGameSmiley" id="newGameSmiley" style="position: relative; left: 5px; top: 2px; width: 40px; height: 40px; display: none;" />
+                </div>
+                <div style="flex-grow: 1;">
+                    <button class="small" type="button" style="position: relative; font-size: 22px; float: right; top: 6px; right: 6px; display: none;" id="toggleScreen" id="toggleScreen">+</button>
+                </div>
+            </div>
+            <!-- the canvas with the mines on it and one with the the hints -->
+            <div id="board" style="overflow: auto; position: relative; top:0px; left:0px;">
+                <canvas id="myCanvas" width="500" height="500" style="position: absolute; top: 0px; left: 0px;"></canvas>
+                <canvas id="myHints" width="500" height="500" style="position: absolute; top: 0px; left: 0px; pointer-events: none;"></canvas>
+            </div>
+            <span id="tooltip" class="tooltiptext" style="pointer-events: none;"></span>
+            <div id="messageBar" class="hidden">
+                <div style="display:flex; flex-direction: column; justify-content: flex-end; position: relative; bottom: 0px; left: 0px; right: 0px; height: 28px;">
+                    <label id="messageLine" style="font-size: 18px; overflow-y: auto; padding-left: 0px"></label>
+                </div>
+            </div>
+            <div id="downloadBar" style="position: relative; left: 0px; top: 0px; right: 0px; height: 20px; display: none;">
+                <a id="saveposition" style="float: left; width: 140px; margin-right: 30px;" download="" href=""></a>
+                <a id="savembf" style="float: left; width: 120px; margin-right: 30px;" download="" href=""></a>
+                
+            </div>
+            <span style="margin-top: 10px;">
+                <label>Tile size:</label>
+                <select id="tilesize">
+                    <option value="8">8px</option>
+                    <option value="12">12px</option>
+                    <option value="16">16px</option>
+                    <option value="20">20px</option>
+                    <option selected value="24">24px (default)</option>
+                    <option value="28">28px</option>
+                    <option value="32">32px</option>
+                    <option value="36">36px</option>
+                    <option value="40">40px</option>
+                    <option value="44">44px</option>
+                    <option value="48">48px</option>
+                    <option value="52">52px</option>
+                    <option value="56">56px</option>
+                    <option value="60">60px</option>
+                </select>
+            </span>
+            <br>
+            <button type="button" style="margin-top: 1em;" id="loadBoardButton">Load Board</button>
+            <button type="button" style="margin-top: 1em;" id="AnalysisButton">Analyse</button>
+            
+            <div><label style="font-size: large; color: red;" id="showMessage"></label></div>
+            
+            <button id="toggleBtn">Help</button>
+            <div id="collapsibleDiv" style="display: none;">
+                <p>If you don't see the extension board auto-updating when you open cells, try refreshing minesweeper.online page and opening another cell.</p>
+                <p>You should only click on the minesweeper.online board, not on the extension board.</p>
+                <p>The numbers on the closed tiles are the mine chances for those tiles.</p>
+                <p>You should refresh minesweeper.online page after changing game mode or difficulty. Or open a new extension window after change.</p>
+            </div>
+
+        </div>
+    </div>
+    <div id="messageBarBottom" style="display: none;">
+        <div class="raised" style="display:flex; flex-direction: column; justify-content: flex-end; position: absolute; bottom: 0px; left: 170px; right: 0px; height: 28px;">
+            <label id="messageLineBottom" style="font-size: 18px; overflow-y: auto; padding-left: 0px"></label>
+        </div>
+    </div>
+    <!-- Local storage popup -->
+    <div id="localStorage" class="modal">
+        <div class="modal-content" style="position: relative; width: 600px; height: 600px">
+            <p>From here you can store and fetch positions from the browsers local storage. This storage persists between sessions.</p>
+            <select style="width: 100%" id="localStorageSelection" size="24" onchange="localStorageKey.value = localStorageSelection.value"></select>
+            <input id="localStorageKey" type="text" style="width: 98%" />
+            <button style="position: absolute; bottom: 50px; left: 5px" id="localStorageDelete" id="localStorageDelete">Delete</button>
+            <button style="position: absolute; bottom: 50px; left: 225px" id="localStorageSave" id="localStorageSave">Store</button>
+            <button style="position: absolute; bottom: 50px; Right: 5px" id="localStorageLoad" id="localStorageLoad">Fetch</button>
+            <button style="position: absolute; bottom: 5px; right: 5px" id="localStorageCancel" id="localStorageCancel">Cancel</button>
+        </div>
+    </div>
+    <!-- Properties popup -->
+    <div id="properties" class="modal" style="display: none;" >
+        <div id="propertiesBox" class="modal-content" style="position: absolute; top: 100px; left: 100px; width: 300px; height: 400px;">
+            <div id="propertiesHeader" style="font-size: 30px; height: 32px; padding: 0px;">Settings</div>
+            <!-- ... (rest of properties controls) ... -->
+            <button style="position: absolute; bottom: 5px; Right: 15px" id="propertiesClose" id="propertiesClose">Close</button>
+        </div>
+    </div>
+    <!-- No Guess builder display -->
+    <div id="noGuessBuilder" class="modal">
+        <div class="modal-content" style="position: absolute; width: 225px; height: 100px; top: 100px; left: 100px">
+            <label style="font-size:20px; padding:5px;">Building No Guess board</label>
+            <label id="ngText" style="font-size:20px; padding:5px;"></label>
+            <button style="position: absolute; bottom: 5px; Right: 30px" id="ngBuilderClose" id="ngBuilderClose">Cancel</button>
+        </div>
+    </div>
+
+  </div>
+  <!-- JS scripts -->
+  <script src="JSMinesweeper/Minesweeper/client/Board.js" type="text/javascript"></script>
+  <script src="JSMinesweeper/Minesweeper/client/Tile.js" type="text/javascript"></script>
+  <script src="JSMinesweeper/Minesweeper/client/solver_main.js" type="text/javascript"></script>
+  <script src="JSMinesweeper/Minesweeper/client/solver_probability_engine.js" type="text/javascript"></script>
+  <script src="JSMinesweeper/Minesweeper/client/Brute_force.js" type="text/javascript"></script>
+  <script src="JSMinesweeper/Minesweeper/client/BruteForceAnalysis.js" type="text/javascript"></script>
+  <script src="JSMinesweeper/Minesweeper/client/MinesweeperGame.js" type="text/javascript"></script>
+  <script src="JSMinesweeper/Minesweeper/client/SolutionCounter.js" type="text/javascript"></script>
+  <script src="JSMinesweeper/Minesweeper/client/EfficiencyHelper.js" type="text/javascript"></script>
+  <script src="JSMinesweeper/Minesweeper/client/FiftyFiftyHelper.js" type="text/javascript"></script>
+  <script src="JSMinesweeper/Minesweeper/client/LongTermRiskHelper.js" type="text/javascript"></script>
+  <script src="JSMinesweeper/Minesweeper/client/main.js" type="text/javascript"></script>
+  <script src="JSMinesweeper/Minesweeper/Utility/PrimeSieve.js" type="text/javascript"></script>
+  <script src="JSMinesweeper/Minesweeper/Utility/Binomial.js" type="text/javascript"></script>
+  <script src="JSMinesweeper/Minesweeper/client/_cascade_expose_globals.js" type="text/javascript"></script>
+  <script src="popup.js" type="text/javascript"></script>
+</body>
+</html>

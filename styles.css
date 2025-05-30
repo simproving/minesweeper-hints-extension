@@ -1,0 +1,22 @@
+body {
+  min-width: 200px;
+  font-family: Arial, sans-serif;
+  background: #f7f7f7;
+  margin: 0;
+  padding: 10px;
+}
+#hint-btn {
+  background: #2196f3;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+#hint-result {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #333;
+}

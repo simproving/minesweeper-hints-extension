@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Minesweeper Hints",
+  "version": "1.0",
+  "description": "Provides hints for minesweeper",
+  "permissions": ["activeTab"],
+  "host_permissions": ["https://minesweeper.online/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://minesweeper.online/*"],
+      "js": ["content.js"]
+    }
+  ]
+}
